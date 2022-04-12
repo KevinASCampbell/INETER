@@ -1,0 +1,372 @@
+'CR6 Series
+'Created by Short Cut (4.1)
+
+'Declare Variables and Units
+Const TipPluviometro=0.2
+Const OffsetTx_min = 15
+
+Const ScanRate = 300 'Escaneo en segundos
+Public BattV
+Public PTemp_C
+
+Public offsetBubbler = 0
+
+Public goes_enabled
+Public goes_comport
+Public goes_message_window
+Public goes_repeat_count
+Public goes_platform_id As String
+Public goes_tr_baud_rate
+Public goes_rt_channel
+Public goes_st_baud_rate
+Public goes_st_channel
+Public goes_rt_interval As String
+Public goes_st_interval As String
+Public goes_st_offset As String
+
+Public reported_transmitter_id As String
+Public goes_date_time As String
+Public goes_version As String * 30
+Public goes_battery
+Public goes_temperature
+Public goes_battery_before_tx
+Public goes_temperature_before_tx
+Public goes_battery_during_tx
+Public goes_latitude As Double
+
+Public goes_longitude As Double
+Public goes_altitude
+Public goes_time_last_gps_position As String
+Public goes_number_of_missed_gps
+Public goes_time_last_missed_gps_fix As String
+Public goes_gps_acquisitions_status
+Public goes_gps_antenna
+Public goes_fail_safe_indicator
+Public goes_durations_of_transmit
+
+Public goes_forward_tx_power
+Public goes_reflected_rf_power
+Public goes_vswr As Long
+Public goes_last_tx_control_flags
+Public goes_last_tx_start_time As String
+Public goes_last_tx_channel
+Public goes_last_type_code
+Public goes_last_data_length
+Public goes_last_hdr_flagword
+Public goes_tx_result_code
+Public goes_current_tx_state
+
+Public FormattedString1 As String
+Public FormattedString2 As String
+Public FormattedString3 As String
+Public FormattedString4 As String
+Public FormattedString5 As String
+Public FormattedString6 As String
+Public FormattedString7 As String
+Public FormattedString8 As String
+Public FormattedString9 As String
+Public FormattedString10 As String
+Public FormattedString11 As String
+Public FormattedString12 As String
+Public FormattedString13 As String
+Public FormattedString14 As String
+Public FormattedString15 As String
+Public FormattedString16 As String
+Public FormattedString17 As String
+Public FormattedString18 As String
+Public FormattedString19 As String
+Public FormattedString20 As String
+Public FormattedString21 As String
+Public FormattedString22 As String
+Public FormattedString23 As String
+
+Public TX325 As String * 400
+
+Public Amazon(6)
+Alias Amazon(1) = Bubbler_Nivel
+Alias Amazon(2) = Bubbler_Presion_PSI
+Alias Amazon(3) = Bubbler_Temp_Int_C
+Alias Amazon(4) = Bubbler_Bat_Interf_Sens_V
+Alias Amazon(5) = Bubbler_Presion_Tanque_PSI
+Alias Amazon(6) = Bubbler_Bat_Compresor
+
+Public Lluvia_mm
+
+
+Units BattV=Volts
+Units PTemp_C=Deg C
+Units Lluvia_mm=mm
+
+'Define Data Tables
+DataTable(Datos15min,-1,-1)
+  DataInterval(0,15,Min,10)
+  Totalize(1,Lluvia_mm,FP2,False)
+  Average (6,Amazon(),FP2, False)
+EndTable
+
+
+DataTable(Horaria,True,-1)
+  DataInterval(0,60,Min,10)
+  Sample (1,BattV,FP2)
+  Average (6,Amazon(),FP2,False)
+  Totalize (1,Lluvia_mm,FP2,False)
+EndTable
+
+DataTable(Diaria,True,-1)
+  DataInterval(0,1,Day,10)
+  Average (6,Amazon(),FP2,False)
+EndTable
+
+DataTable(DiarioLluvia,True,-1)
+  DataInterval(7,24,Hr,10)
+  Totalize(1,Lluvia_mm,FP2,False)
+EndTable
+
+DataTable(TX325Table, True, -1)
+  GOESTable (TX325, COMRS232, 3, 0, TRUE, TRUE,4)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString1, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString2, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString3, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString4, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString5, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString6, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString7, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString8, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString9, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString10, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString11, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString12, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString13, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString14, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString15, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString16, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString17, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString18, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString19, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString20, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString21, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString22, String)
+  GOESField (1, 1, 1, 3, "")
+  Sample (1, FormattedString23, String)
+EndTable
+
+DataTable (GOES_DIAGNOSTICS, 1, 1000)
+  Sample (1, goes_enabled, FP2)
+  Sample (1, goes_comport , FP2)
+  Sample (1, goes_message_window, FP2)
+  Sample (1, goes_repeat_count, FP2)
+  Sample (1, goes_platform_id, String)
+  Sample (1, goes_tr_baud_rate, FP2)
+  Sample (1, goes_rt_channel, FP2)
+  Sample (1, goes_st_baud_rate, FP2)
+  Sample (1, goes_st_channel, FP2)
+  Sample (1, goes_rt_interval, String)
+  Sample (1, goes_st_interval, String)
+  Sample (1, goes_st_offset, String)
+  Sample (1, reported_transmitter_id, String)
+  Sample (1, goes_date_time, String)
+  Sample (1, goes_version, String)
+  Sample (1, goes_battery, IEEE4)
+  Sample (1, goes_temperature, IEEE4)
+  Sample (1, goes_battery_before_tx, IEEE4)
+  Sample (1, goes_temperature_before_tx, FP2)
+  Sample (1, goes_battery_during_tx, IEEE4)
+  Sample (1, goes_latitude, IEEE8)
+  Sample (1, goes_longitude, IEEE8)
+  Sample (1, goes_altitude, FP2)
+  Sample (1, goes_time_last_gps_position, String)
+  Sample (1, goes_number_of_missed_gps, FP2)
+  Sample (1, goes_time_last_missed_gps_fix, String)
+  Sample (1, goes_gps_acquisitions_status, FP2)
+  Sample (1, goes_gps_antenna, FP2)
+  Sample (1, goes_fail_safe_indicator, FP2)
+  Sample (1, goes_durations_of_transmit, FP2)
+  Sample (1, goes_forward_tx_power, FP2)
+  Sample (1, goes_reflected_rf_power, FP2)
+  Sample (1, goes_vswr, IEEE8)
+  Sample (1, goes_last_tx_control_flags, FP2)
+  Sample (1, goes_last_tx_start_time, String)
+  Sample (1, goes_last_tx_channel, FP2)
+  Sample (1, goes_last_type_code, FP2)
+  Sample (1, goes_last_data_length, FP2)
+  Sample (1, goes_last_hdr_flagword, FP2)
+  Sample (1, goes_tx_result_code, FP2)
+  Sample (1, goes_current_tx_state, FP2)
+EndTable
+
+
+'''''''''''''''''' Variables  para conversion a formate 3bytes pseudobinario compatible xConnect ''''''''''''''''
+Public FormattedString As String * 150
+Public ScheduledOffset As String
+'This function will convert a long to a string in 18bit binary integer format
+Function Pseudo3byte(InputValue As Long) As String  'valid range is -131072 to 131071
+  Dim value1st, value2nd, value3rd '1st is most significant
+  Dim tempvalue
+  If InputValue<0 Then
+    InputValue=InputValue+262144  'this does two's compliment
+  EndIf
+  value1st=INT(InputValue/4096)
+  tempvalue=InputValue-(value1st*4096)
+  value2nd=INT(tempvalue/64)
+  value3rd=tempvalue-(value2nd*64)
+  If value1st<>63 Then (value1st=(value1st+64))
+  If value2nd<>63 Then (value2nd=(value2nd+64))
+  If value3rd<>63 Then (value3rd=(value3rd+64))
+
+  Return (CHR(value1st)+CHR(value2nd)+CHR(value3rd))
+EndFunction
+
+''''''''''''''''''Fin de variables tablas y funciones para XConnect '''''''
+
+'Main Program
+BeginProg
+  'Main Scan
+
+  Scan(ScanRate,Sec,2,0)
+
+    'Default CR6 Datalogger Battery Voltage measurement 'BattV'
+    Battery(BattV)
+    'Default CR6 Datalogger Wiring Panel Temperature measurement 'PTemp_C'
+    PanelTemp(PTemp_C,60)
+
+    'TB4MM Rain Gauge measurement 'Lluvia_mm'
+    PulseCount(Lluvia_mm,1,P1,1,0,TipPluviometro,0)
+
+    SDI12Recorder (Amazon(),C1,0,"M!",1.0,0)
+    Bubbler_Nivel = Bubbler_Nivel + offsetBubbler
+    If Bubbler_Nivel = "NAN" Then
+      Bubbler_Nivel = datos15min.Bubbler_Nivel_Avg(1,1)
+    End If
+
+
+    'Call Data Tables and Store Data
+
+
+    CallTable Datos15min
+    CallTable Horaria
+    CallTable Diaria
+    CallTable DiarioLluvia
+
+    '''''''''Inicio de datos necesarios para formatear los datos en la tabla que se envia por GOES para ser recibida por XConnect. ''''''
+    ScheduledOffset = 65 'this means 1 minute
+    'These are the data formats as transmitted
+    FormattedString = "B1" & CHR(ScheduledOffset)
+    FormattedString1 = FormattedString
+    FormattedString +=pseudo3byte(INT(datos15min.Lluvia_mm_tot(1,1)*10)) '2
+    FormattedString2 =pseudo3byte(INT(datos15min.Lluvia_mm_tot(1,1)*10)) '2
+    FormattedString +=pseudo3byte(INT(datos15min.Lluvia_mm_tot(1,2)*10)) '5
+    FormattedString3 =pseudo3byte(INT(datos15min.Lluvia_mm_tot(1,2)*10)) '5
+    FormattedString +=pseudo3byte(INT(datos15min.Lluvia_mm_tot(1,3)*10)) '8
+    FormattedString4 =pseudo3byte(INT(datos15min.Lluvia_mm_tot(1,3)*10)) '8
+    FormattedString +=pseudo3byte(INT(datos15min.Lluvia_mm_tot(1,4)*10)) '11
+    FormattedString5 =pseudo3byte(INT(datos15min.Lluvia_mm_tot(1,4)*10)) '11
+    FormattedString +=pseudo3byte(INT(datos15min.Lluvia_mm_tot(1,5)*10)) '14
+    FormattedString6 =pseudo3byte(INT(datos15min.Lluvia_mm_tot(1,5)*10)) '14
+    FormattedString +=pseudo3byte(INT(datos15min.Lluvia_mm_tot(1,6)*10)) '17
+    FormattedString7 =pseudo3byte(INT(datos15min.Lluvia_mm_tot(1,6)*10)) '17
+    FormattedString +=pseudo3byte(INT(datos15min.Lluvia_mm_tot(1,7)*10)) '20
+    FormattedString8 =pseudo3byte(INT(datos15min.Lluvia_mm_tot(1,7)*10)) '20
+    FormattedString +=pseudo3byte(INT(datos15min.Lluvia_mm_tot(1,8)*10)) '23
+    FormattedString9 =pseudo3byte(INT(datos15min.Lluvia_mm_tot(1,8)*10)) '23
+
+    FormattedString +=pseudo3byte(INT(datos15min.Bubbler_Nivel_Avg(1,1)*100)) '26
+    FormattedString14 =pseudo3byte(INT(datos15min.Bubbler_Nivel_Avg(1,1)*100)) '26
+    FormattedString +=pseudo3byte(INT(datos15min.Bubbler_Nivel_Avg(1,2)*100)) '29
+    FormattedString15 =pseudo3byte(INT(datos15min.Bubbler_Nivel_Avg(1,2)*100)) '29
+    FormattedString +=pseudo3byte(INT(datos15min.Bubbler_Nivel_Avg(1,3)*100)) '32
+    FormattedString16 =pseudo3byte(INT(datos15min.Bubbler_Nivel_Avg(1,3)*100)) '32
+    FormattedString +=pseudo3byte(INT(datos15min.Bubbler_Nivel_Avg(1,4)*100)) '35
+    FormattedString17 =pseudo3byte(INT(datos15min.Bubbler_Nivel_Avg(1,4)*100)) '35
+    FormattedString +=pseudo3byte(INT(datos15min.Bubbler_Nivel_Avg(1,5)*100)) '38
+    FormattedString18 =pseudo3byte(INT(datos15min.Bubbler_Nivel_Avg(1,5)*100)) '38
+    FormattedString +=pseudo3byte(INT(datos15min.Bubbler_Nivel_Avg(1,6)*100)) '41
+    FormattedString19 =pseudo3byte(INT(datos15min.Bubbler_Nivel_Avg(1,6)*100)) '41
+    FormattedString +=pseudo3byte(INT(datos15min.Bubbler_Nivel_Avg(1,7)*100)) '44
+    FormattedString20 =pseudo3byte(INT(datos15min.Bubbler_Nivel_Avg(1,7)*100)) '44
+    FormattedString +=pseudo3byte(INT(datos15min.Bubbler_Nivel_Avg(1,8)*100)) '47
+    FormattedString21 =pseudo3byte(INT(datos15min.Bubbler_Nivel_Avg(1,8)*100)) '47
+
+    FormattedString +=pseudo3byte(INT(horaria.BattV(1,1)*100)) '50
+    FormattedString22 =pseudo3byte(INT(horaria.BattV(1,1)*100)) '50
+    FormattedString +=pseudo3byte(INT(horaria.BattV(1,2)*100)) '53
+    FormattedString23 =pseudo3byte(INT(horaria.BattV(1,2)*100)) '53
+
+    If IfTime (OffsetTx_min,60,Min) Then
+      CallTable(TX325Table)
+    EndIf
+    '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+  NextScan
+
+  SlowSequence
+  Scan(5, Min, 0, 0)
+    goes_platform_id = UpperCase(Settings.GOESPlatformID)
+    goes_enabled = Settings.GOESEnabled
+    goes_comport = Settings.GOESComport
+    goes_message_window = Settings.GOESMsgWindow
+    goes_repeat_count = Settings.GOESRepeatCount
+    goes_tr_baud_rate = Settings.GOESRTBaudRate
+    goes_rt_channel = Settings.GOESRTChannel
+    goes_st_baud_rate = Settings.GOESSTBaudRate
+    goes_st_channel = Settings.GOESSTChannel
+    goes_rt_interval = Settings.GOESRTInterval
+    goes_st_interval = Settings.GOESSTInterval
+    goes_st_offset = Settings.GOESSTOffset
+
+    reported_transmitter_id = UpperCase(Settings.GOESid)
+    goes_date_time = Settings.GOESdateTime
+    goes_version = Settings.GOESversion
+    goes_battery = Settings.GOESCurrentbattery
+    goes_temperature = Settings.GOESCurrenttemperature
+    goes_battery_before_tx = Settings.GOESbatteryBeforeTx
+    goes_temperature_before_tx = Settings.GOEStemperatureBeforeTx
+    goes_battery_during_tx = Settings.GOESbatteryDuringTx
+    goes_latitude = Settings.GOESLatitude
+
+    goes_longitude = Settings.GOESLongitude
+    goes_altitude = Settings.GOESAltitude
+    goes_time_last_gps_position = Settings.GOESTimeLastGPSPosition
+    goes_number_of_missed_gps = Settings.GOESNumberOfMissedGPS
+    goes_time_last_missed_gps_fix = Settings.GOESTimeLastMissedGPSFix
+    goes_gps_acquisitions_status = Settings.GOESGPSAcquisitionStatus
+    goes_gps_antenna = Settings.GOESGPSAntennaStatus
+    goes_fail_safe_indicator = Settings.GOESFailSafeIndicator
+    goes_durations_of_transmit = Settings.GOESDurationOfTransmit
+
+    goes_forward_tx_power = Settings.GOESForwardTxPower
+    goes_reflected_rf_power = Settings.GOESReflectedRfPower
+    goes_vswr = Settings.GOESVSWR
+    goes_last_tx_control_flags = Settings.GOESLastTxControlFlags
+    goes_last_tx_start_time = Settings.GOESLastTxStartTime
+    goes_last_tx_channel = Settings.GOESLastTxChannel
+    goes_last_type_code = Settings.GOESLastTypeCode
+    goes_last_data_length = Settings.GOESLastDatalength
+    goes_last_hdr_flagword = Settings.GOESLastHDRFlagWord
+    goes_tx_result_code = Settings.GOESTxResultCode
+    goes_current_tx_state = Settings.GOESCurrentTxState
+
+    CallTable GOES_DIAGNOSTICS
+  NextScan
+  EndSequence
+EndProg
